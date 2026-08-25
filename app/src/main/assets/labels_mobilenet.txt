@@ -1,0 +1,14 @@
+person
+portrait
+night
+sunset
+snow
+water
+food
+indoor
+plant
+building
+document
+sky
+baby
+animal

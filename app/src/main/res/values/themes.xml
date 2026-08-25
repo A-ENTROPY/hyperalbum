@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme (Material 3, edge-to-edge friendly).
+         windowShowWallpaper + transparent windowBackground lets the system
+         wallpaper render behind all app content — the core of Liquid Glass. -->
+    <style name="Theme.LiquidGallery" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+        <item name="android:enforceStatusBarContrast" tools:targetApi="q">false</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
+    </style>
+
+    <!-- Splash variant with the splashscreen API surface. -->
+    <style name="Theme.LiquidGallery.Splash" parent="Theme.LiquidGallery">
+        <item name="android:windowSplashScreenBackground" tools:targetApi="s">@color/surface_dark</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="s">@drawable/ic_splash_logo</item>
+        <item name="android:windowSplashScreenAnimationDuration" tools:targetApi="s">300</item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="s">@color/surface_dark</item>
+    </style>
+</resources>

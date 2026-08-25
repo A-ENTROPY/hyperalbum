@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Liquid Gallery</string>
+    <string name="app_name_en">Liquid Gallery</string>
+    <string name="open_with_smartvision">用 Liquid Gallery 打开</string>
+    <string name="share_to_smartvision">分享到 Liquid Gallery</string>
+
+    <!-- Navigation -->
+    <string name="nav_timeline">时光</string>
+    <string name="nav_albums">相册</string>
+    <string name="nav_search">搜索</string>
+    <string name="nav_settings">设置</string>
+
+    <!-- Viewer -->
+    <string name="viewer_format_label">格式</string>
+    <string name="viewer_info">信息</string>
+    <string name="viewer_share">分享</string>
+    <string name="viewer_edit">编辑</string>
+    <string name="viewer_delete">删除</string>
+
+    <!-- Empty states -->
+    <string name="empty_no_media">还没有可显示的媒体</string>
+    <string name="empty_no_albums">暂无相册</string>
+    <string name="empty_search_no_results">没有匹配的结果</string>
+
+    <!-- Cell accessibility -->
+    <string name="selected">已选中</string>
+    <string name="video">视频</string>
+
+    <!-- Search modes -->
+    <string name="search_mode_location">带位置的照片</string>
+
+    <!-- Settings -->
+    <string name="settings_performance_mode">性能模式</string>
+    <string name="settings_hardware_accel">硬件加速解码</string>
+    <string name="settings_prefer_next_gen">优先使用次世代格式</string>
+    <string name="settings_about">关于</string>
+
+    <!-- Privacy vault -->
+    <string name="vault_unlock_title">Unlock Privacy Space</string>
+    <string name="vault_unlock_subtitle">Authenticate to view hidden media</string>
+    <string name="vault_auth_failed">Authentication failed. Please try again.</string>
+    <string name="vault_auth_cancelled">Authentication cancelled</string>
+    <string name="vault_auth_error">Authentication error: %1$s</string>
+    <string name="vault_hide_success">Hidden to Privacy Space</string>
+    <string name="vault_hide_failed">Hide failed: %1$s</string>
+    <string name="vault_unhide_success">Restored</string>
+    <string name="vault_file_corrupt">This file is corrupt and cannot be decrypted</string>
+    <string name="vault_not_enrolled">No biometrics enrolled. Tap to set up.</string>
+    <string name="vault_setup_now">Set up now</string>
+    <string name="vault_encrypted_title">Privacy Space Encrypted</string>
+    <string name="vault_unlock_hint_available">Authenticate to view hidden media</string>
+    <string name="vault_unlock_hint_not_enrolled">No biometrics enrolled. Tap below to set up.</string>
+    <string name="vault_unlock_hint_no_hardware">This device does not support biometrics</string>
+    <string name="vault_unlock_hint_unavailable">Unlock service is temporarily unavailable</string>
+    <string name="vault_authenticate">Authenticate</string>
+    <string name="vault_relock">Re-lock</string>
+    <string name="vault_empty">No hidden content yet</string>
+
+    <!-- Scanner -->
+    <string name="scanner_channel_name">Media Library</string>
+    <string name="scanner_scanning_text">Scanning media library…</string>
+
+    <!-- Albums (default names) -->
+    <string name="album_favorites">Favorites</string>
+</resources>

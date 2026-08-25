@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Splash logo: condensed version of the launcher icon for use during cold start. -->
+    <path
+        android:pathData="M0,0h96v96H0z">
+        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="48"
+                android:centerY="36"
+                android:gradientRadius="72"
+                android:startColor="#FF1F6FEB"
+                android:endColor="#FF0E1116" />
+        </aapt:attr>
+    </path>
+    <path
+        android:fillColor="#CC7B61FF"
+        android:pathData="M48,16a32,32 0 1,0 0.001,0z" />
+    <path
+        android:fillColor="#CC00BFA5"
+        android:pathData="M48,28a20,20 0 1,0 0.001,0z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M44,42h8v4h-8z" />
+</vector>

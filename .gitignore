@@ -1,0 +1,84 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+.kotlin/
+app/release/
+app/debug/
+app/build/
+
+# Local secrets
+*.keystore
+google-services.json
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Native build artifacts
+*.so
+*.o
+*.obj
+*.exp
+*.lib
+*.pdb
+*.ilk
+*.so.bak*
+
+# CMake build trees
+app/src/main/cpp/build_android/
+
+# hwy/brotli headers: not in the stubs include closure (prebuilt .a only)
+app/src/main/jniLibs/arm64-v8a/hwy/
+app/src/main/jniLibs/arm64-v8a/brotli/
+
+# Logs
+*.log
+
+# Generated APK
+app/release/*.apk
+app/debug/*.apk
+# Local debug databases
+*.db
+!app/src/main/assets/databases/*.db
+
+# AI 模型资产（>100MB 超 GitHub 限制，本地保留不提交）
+app/src/main/assets/*.onnx
+app/src/main/assets/*.tflite
+app/src/main/assets/*.bin
+
+# 根级本地截图/调试产物（不提交）
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+/ui*.xml
+ui_check.png
+/tmp*
+/tmp_refscreens/
+/*.pb
+t.pb
+framestats_raw.txt
+tmp-crash-logcat.txt
+perf_config.pbtxt
+build.log
+
+# 本地调试脚本
+pinch*.sh
+swipe.sh
+spread_to_3cols.sh
+test_cmake.bat
+
+# 工具/agent 工作目录（会话产物，非源码）
+.mavis/
+.superpowers/
+.venv-wd/
+.mavis
+.superpowers

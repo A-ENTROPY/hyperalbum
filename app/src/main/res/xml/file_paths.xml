@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  L2/L8: scoped FileProvider paths. We only expose:
+    * cacheDir/vault-decoded/  → decrypted vault plaintext
+    * filesDir/exports/        → user-initiated exports
+  All other paths (including the .vault cipher cache) stay outside the
+  FileProvider surface, so a misissued grant cannot leak ciphertext or
+  unrelated cached media.
+-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path name="vault_decoded" path="vault-decoded/" />
+    <cache-path name="share" path="share/" />
+    <cache-path name="editor" path="." />
+    <files-path name="exports" path="exports/" />
+</paths>

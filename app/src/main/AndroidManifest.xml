@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Storage: Android 13+ uses granular media permissions; below 13 we use READ_EXTERNAL_STORAGE.
+         Android 14+ introduced READ_MEDIA_VISUAL_USER_SELECTED for partial photo access. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+
+    <!-- Biometric for privacy vault (BIOMETRIC_STRONG; no legacy USE_FINGERPRINT) -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <!-- 设为壁纸：WallpaperManager.setBitmap 需要 -->
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
+
+    <!-- Network for cloud sync -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+
+    <!-- Optional: location for EXIF-driven grouping. Used only at user request. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!--
+        ACCESS_MEDIA_LOCATION — required on Android 10+ to read EXIF GPS tags
+        (latitude / longitude) via the MediaStore URIs our scanner uses. Without
+        this, MediaStore redacts GPS metadata from the InputStream, so ExifInterface.getLatLong()
+        always returns false. We deliberately do NOT request this at runtime —
+        when the user opens a location feature without the permission we surface a Toast
+        explaining how to enable it in Settings.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+
+    <!-- Foreground service for background scan/sync -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="image/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="video/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="image/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND_MULTIPLE" />
+            <data android:mimeType="image/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.PICK" />
+            <data android:mimeType="image/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.PICK" />
+            <data android:mimeType="video/*" />
+        </intent>
+    </queries>
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
+
+    <application
+        android:name=".SmartVisionApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.LiquidGallery"
+        android:largeHeap="true"
+        android:hardwareAccelerated="true"
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="34">
+
+        <!-- Splash screen via androidx.core:core-splashscreen -->
+        <meta-data
+            android:name="android.app.shortcuts"
+            android:resource="@xml/shortcuts" />
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode|smallestScreenSize|screenLayout|density|fontScale"
+            android:resizeableActivity="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.LiquidGallery.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Standalone photo viewer. Hosts its own minimal Compose tree with
+            NO Liquid Glass primitives, bypassing the in-NavHost
+            PhotoViewerPage whose render-tree path triggers a realme
+            ColorOS 16 HWUI RenderEffect native stack overflow. External
+            ACTION_VIEW / ACTION_SEND intents route here directly so they
+            skip the main app's render tree entirely; internal navigation
+            launches this Activity via startActivity().
+
+            Uses the base (non-Splash) theme — SplashScreen API surfaces a
+            dark windowSplashScreenBackground (@color/surface_dark =
+            #0E1116) which leaked as a ~1s dark strip behind the top
+            status bar on viewer open. The viewer is a child activity
+            (launched from Timeline / Albums), not the launcher, so it
+            does not need a splash.
+        -->
+        <activity
+            android:name=".ui.viewer.PhotoViewerActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode|smallestScreenSize|screenLayout|density|fontScale"
+            android:resizeableActivity="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.LiquidGallery">
+            <!-- Open as viewer for an image/video directly -->
+            <intent-filter android:label="@string/open_with_smartvision">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+
+            <!-- "Share to Liquid Gallery" target -->
+            <intent-filter android:label="@string/share_to_smartvision">
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Standalone editor wrapper for the Intent-launched PhotoViewerActivity
+            (which bypasses the nav graph to dodge the ColorOS 16 RenderEffect
+            stack overflow). Mirrors PhotoViewerActivity's config so rotations
+            and dark/light theme changes don't recreate the editor.
+        -->
+        <activity
+            android:name=".ui.editor.PhotoEditorActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode|smallestScreenSize|screenLayout|density|fontScale"
+            android:resizeableActivity="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.LiquidGallery" />
+
+        <!-- Background scan service -->
+        <service
+            android:name=".scanner.MediaScanService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- File provider for sharing -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Disable WorkManager's androidx.startup auto-init so SmartVisionApp's
+             Configuration.Provider can supply our custom WorkerFactory
+             (AiTaggingWorker needs repo + dao + prefs injected). -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+    </application>
+
+</manifest>

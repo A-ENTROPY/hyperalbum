@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Privacy vault -->
+    <string name="vault_unlock_title">解锁隐私空间</string>
+    <string name="vault_unlock_subtitle">验证身份以查看隐藏的媒体</string>
+    <string name="vault_auth_failed">身份验证失败,请重试</string>
+    <string name="vault_auth_cancelled">已取消身份验证</string>
+    <string name="vault_auth_error">身份验证出错: %1$s</string>
+    <string name="vault_hide_success">已隐藏到隐私空间</string>
+    <string name="vault_hide_failed">隐藏失败: %1$s</string>
+    <string name="vault_unhide_success">已恢复</string>
+    <string name="vault_file_corrupt">该文件已损坏,无法解密</string>
+    <string name="vault_not_enrolled">未设置生物识别,点击前往设置</string>
+    <string name="vault_setup_now">立即设置</string>
+    <string name="vault_encrypted_title">隐私空间已加密</string>
+    <string name="vault_unlock_hint_available">使用生物识别解锁后查看</string>
+    <string name="vault_unlock_hint_not_enrolled">未启用生物识别,点击下方进行设置</string>
+    <string name="vault_unlock_hint_no_hardware">该设备不支持生物识别</string>
+    <string name="vault_unlock_hint_unavailable">解锁服务暂不可用</string>
+    <string name="vault_authenticate">验证身份</string>
+    <string name="vault_relock">重新上锁</string>
+    <string name="vault_empty">暂无隐藏内容</string>
+
+    <!-- Scanner -->
+    <string name="scanner_channel_name">媒体库</string>
+    <string name="scanner_scanning_text">正在扫描媒体库…</string>
+
+    <!-- Albums (default names) -->
+    <string name="album_favorites">收藏</string>
+</resources>

@@ -1,0 +1,6 @@
+real
+anime
+game_screenshot
+movie_screenshot
+digital_painting
+meme

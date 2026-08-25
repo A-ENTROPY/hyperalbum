@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand palette: deep tech blue + clean white, accented for AI/HDR moments. -->
+    <color name="brand_primary">#FF1F6FEB</color>
+    <color name="brand_primary_container">#FFD8E2FF</color>
+    <color name="brand_secondary">#FF7B61FF</color>
+    <color name="brand_tertiary">#FF00BFA5</color>
+
+    <color name="surface_dark">#FF0E1116</color>
+    <color name="surface_dark_high">#FF1A1F27</color>
+    <color name="surface_light">#FFFAFBFC</color>
+    <color name="surface_light_high">#FFFFFFFF</color>
+
+    <color name="format_tag_avif">#FFFF6B6B</color>
+    <color name="format_tag_jxl">#FF4ECDC4</color>
+    <color name="format_tag_heic">#FFFFE66D</color>
+    <color name="format_tag_webp">#FF6BCB77</color>
+    <color name="format_tag_jpeg">#FF4D96FF</color>
+    <color name="format_tag_png">#FFC9CBFF</color>
+    <color name="format_tag_gif">#FFFFB6B9</color>
+    <color name="format_tag_raw">#FFB983FF</color>
+    <color name="format_tag_video">#FFFFA931</color>
+    <color name="format_tag_default">#FF6C757D</color>
+</resources>

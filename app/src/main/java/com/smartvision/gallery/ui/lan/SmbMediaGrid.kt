@@ -29,7 +29,15 @@ import com.smartvision.gallery.lan.smb.*
 import com.smartvision.gallery.ui.apple.iOSSegmentedControl
 import com.smartvision.gallery.ui.liquidglass.LiquidGlassCard
 import com.smartvision.gallery.ui.liquidglass.LocalSegmentedControlBackdropState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.concurrent.Semaphore
+
+// ponytail: 全局并发限流 ceiling=4。SMB 缩略图走网络+解码，无限制并发会
+// 同时 readBytes 多个大文件 → 内存峰值爆 + 主线程卡死。升级路径：改用 Coil
+// SmbFetcher 流式 + 内存 LRU，此 Semaphore 即可移除。
+private val smbThumbSemaphore = Semaphore(4)
 
 /**
  * SMB 共享文件夹照片网格。
@@ -54,6 +62,16 @@ fun SmbMediaGrid(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val app = context.applicationContext as com.smartvision.gallery.SmartVisionApp
+
+    // pill（AppRoot FloatingTopBarPill / CompactTitleBar）沉浸式悬浮：从屏幕顶
+    // 12dp 起、44dp 高 → 底=56dp。快选 bar 顶 = pill 底 + 8dp 呼吸 = 64dp。
+    // 全部坐标相对屏幕顶（同 TimelinePage：无 statusBars padding，grid 直通
+    // Y=0，chrome 浮于图片上方采样真实像素）。若加 windowInsetsPadding(statusBars)
+    // 会把 grid 顶推到 statusBars 下 → 图片到不了 pill 下方，pill 底下是空白
+    // 而非图片，即"标题栏无法完全浮在图片上面"。故此处不用任何 insets。
+    val barTop = 64.dp
+    // 首行图片从 bar 底（capsule ~34dp）+ 6dp 呼吸之下开始
+    val gridContentTop = barTop + 40.dp
 
     // 状态
     var mediaFiles by remember { mutableStateOf<List<SmbMediaFile>>(emptyList()) }
@@ -131,11 +149,11 @@ fun SmbMediaGrid(
         )
     }
 
+    // 无 windowInsetsPadding(statusBars)：同 TimelinePage，grid 直通屏幕顶 Y=0，
+    // 顶部 pill 浮于图片上方采样真实像素。加 insets padding 会形成 opaque 保留区
+    // div，图片到不了 pill 下方 → 标题栏无法完全浮在图片上（用户反馈）。
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(top = 88.dp)
+        modifier = modifier.fillMaxSize()
     ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -143,7 +161,9 @@ fun SmbMediaGrid(
         // 扫描进度
         if (isScanning) {
             LiquidGlassCard(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 64.dp),
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(16.dp),
             ) {
@@ -169,7 +189,9 @@ fun SmbMediaGrid(
         // 错误信息
         if (errorMessage != null) {
             LiquidGlassCard(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 64.dp),
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(16.dp),
             ) {
@@ -231,11 +253,12 @@ fun SmbMediaGrid(
                 if (!isScanning && filteredFiles.isNotEmpty()) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
-                        // top 留出 segmented control 高度（padding 8dp + 控件
-                        // ~34dp + 间隙 ≈ 56dp），首行图从 bar 下方开始，避免覆盖。
-                        contentPadding = PaddingValues(top = 56.dp, bottom = 8.dp, start = 8.dp, end = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        // 图片直接到顶（Y=0），顶部 pill + 分类 bar 浮在图片上方
+                        // 做液态玻璃折射（同 TimelinePage: 纯 contentPadding，无
+                        // opaque div）。首行从两 chrome 之下开始（bar 底+呼吸）。
+                        contentPadding = PaddingValues(top = gridContentTop, bottom = 8.dp, start = 3.dp, end = 3.dp),
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        verticalArrangement = Arrangement.spacedBy(3.dp),
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         items(filteredFiles, key = { it.path }) { file ->
@@ -268,7 +291,8 @@ fun SmbMediaGrid(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp)
+                        .padding(top = barTop) // 屏幕顶 pill 底(56dp) + 8dp 呼吸 - statusBars
                         .layerBackdrop(hiddenSegBackdrop)
                 ) {
                     iOSSegmentedControl(
@@ -286,7 +310,8 @@ fun SmbMediaGrid(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp)
+                        .padding(top = barTop)
                 ) {
                     iOSSegmentedControl(
                         options = segmentOptions,
@@ -334,10 +359,11 @@ private fun SmbThumbnailCard(
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {
-                // 缓存未命中：通过 SMB 直接加载
+                // 缓存未命中：通过 SMB 降采样加载（写回缓存，下次命中）
                 CoilAsyncSmbThumb(
                     file = file,
                     device = device,
+                    thumbnailCache = thumbnailCache,
                     contentDescription = file.name,
                 )
             }
@@ -366,13 +392,20 @@ private fun SmbThumbnailCard(
 }
 
 /**
- * 通过 SMB 直接加载缩略图。
- * 使用 LaunchedEffect + BitmapFactory 直接从 SMB 读取图片数据。
+ * 通过 SMB 加载缩略图。
+ *
+ * 卡死根因修复（文件多时）：
+ * 1. 全尺寸解码 → 48MP 原图 decodeByteArray = 192MB bitmap，并发叠加直接 OOM/主线程冻结。
+ *    改为先读 bounds 再 inSampleSize 降采样到 ≤512px（与磁盘缓存一致）。
+ * 2. 解码结果写回 [SmbThumbnailCache]，滚动离开再回来命中磁盘缓存，不重复网络读。
+ * 3. [smbThumbSemaphore] 限制同时进行的 SMB 读取（SMB 连接池 maxBuffered=16，
+ *    无限并发会耗尽连接 + 卡死 keepalive/其他操作）。
  */
 @Composable
 private fun CoilAsyncSmbThumb(
     file: SmbMediaFile,
     device: SmbDevice,
+    thumbnailCache: SmbThumbnailCache,
     contentDescription: String?,
 ) {
     val context = LocalContext.current
@@ -383,16 +416,11 @@ private fun CoilAsyncSmbThumb(
 
     LaunchedEffect(file.path, device) {
         isLoading = true
-        try {
-            val ctx = shareManager.getCifsContext(device)
-            val url = device.toSmbUrl(file.path)
-            val resource = ctx.get(url) as jcifs.SmbResource
-            val input = resource.openInputStream()
-            val bytes = input.readBytes()
-            input.close()
-            bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        bitmap = try {
+            loadSmbThumbnail(file, device, thumbnailCache, shareManager)
         } catch (e: Exception) {
             android.util.Log.w("SmbThumb", "thumb load failed: ${file.path}", e)
+            null
         }
         isLoading = false
     }
@@ -416,4 +444,55 @@ private fun CoilAsyncSmbThumb(
             )
         }
     }
+}
+
+/** 缩略图目标尺寸（与磁盘缓存 512x512 一致） */
+private const val THUMB_TARGET = 512
+
+/**
+ * 降采样加载 SMB 缩略图（IO 线程，并发受限）并写回磁盘缓存。
+ * 先 inJustDecodeBounds 读尺寸 → 算 inSampleSize → 降采样解码，
+ * 避免全尺寸解码（48MP 原图 = 192MB bitmap）导致的 OOM/主线程冻结。
+ */
+private suspend fun loadSmbThumbnail(
+    file: SmbMediaFile,
+    device: SmbDevice,
+    thumbnailCache: SmbThumbnailCache,
+    shareManager: SmbShareManager,
+): android.graphics.Bitmap? = withContext(Dispatchers.IO) {
+    smbThumbSemaphore.acquire()
+    try {
+        val ctx = shareManager.getCifsContext(device)
+        val resource = ctx.get(device.toSmbUrl(file.path)) as jcifs.SmbResource
+        val bytes = resource.openInputStream().use { it.readBytes() }
+        if (bytes.isEmpty()) return@withContext null
+
+        // 1) bounds：只读尺寸，不分配像素
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@withContext null
+
+        // 2) 降采样：长边 ≤ THUMB_TARGET
+        val opts = BitmapFactory.Options().apply {
+            inSampleSize = calcSampleSize(bounds.outWidth, bounds.outHeight, THUMB_TARGET)
+        }
+        val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+        if (bmp != null) {
+            thumbnailCache.put(device.host, device.shareName, file.path, bmp)
+        }
+        bmp
+    } finally {
+        smbThumbSemaphore.release()
+    }
+}
+
+/** 计算 2 的幂 inSampleSize：使最长边 ≤ target */
+private fun calcSampleSize(width: Int, height: Int, target: Int): Int {
+    var sample = 1
+    var largest = maxOf(width, height)
+    while (largest / 2 >= target) {
+        largest /= 2
+        sample *= 2
+    }
+    return sample
 }

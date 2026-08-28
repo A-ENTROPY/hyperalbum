@@ -49,7 +49,8 @@ app/debug/*.apk
 *.db
 !app/src/main/assets/databases/*.db
 
-# AI 模型资产（>100MB 超 GitHub 限制，本地保留不提交）
+# AI 模型资产（合计 ~1.25GB，超 GitHub 100MB 单文件/配额限制，本地保留不提交）
+# 模型清单与获取指引见 README「AI 模型资产」一节。
 app/src/main/assets/*.onnx
 app/src/main/assets/*.tflite
 app/src/main/assets/*.bin

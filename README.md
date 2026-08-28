@@ -2,6 +2,8 @@
 
 > 全格式智能相册 App — 液态玻璃界面（iOS 26 Liquid Glass 风格），AVIF / JPEG XL 在 Android 端的完整落地。
 
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE) [![Android](https://img.shields.io/badge/Android-26%2B-green.svg)](https://developer.android.com/) [![Release](https://img.shields.io/badge/Release-v1.0--smb--fix-orange.svg)](https://github.com/A-ENTROPY/hyperalbum/releases)
+
 Liquid Gallery 是一款以「液态玻璃」为核心视觉语言的 Android 相册应用。它不是一套套壳的主题皮肤，而是从渲染管线到交互手势都围绕折射、透镜、质感而重建的相册体验。同时内置次世代图像解码（AVIF / JPEG XL）、局域网 SMB 共享、端侧 AI 识别与加密隐私空间。
 
 ## 特性
@@ -112,7 +114,22 @@ Liquid Gallery 是一款以「液态玻璃」为核心视觉语言的 Android �
 
 - Min SDK 26，Target SDK 36
 - ABI：arm64-v8a（含全部 native 解码库）
-- 模型资产（`*.onnx / *.tflite`）体积大且超 GitHub 单文件上限，不随仓库提交，需按 `app/src/main/assets/` 中占位约定放置。
+- AI 模型资产（合计 ~1.25GB）超 GitHub 单文件/配额限制，**不随仓库提交**，需按下方「AI 模型资产」放置后再构建。
+
+### AI 模型资产
+
+模型由 `app/src/main/java/com/smartvision/gallery/data/ai/` 从 `assets/` 加载（无运行时下载），缺失则 AI 打标功能不可用，其余功能不受影响。模型清单（均为公开开源模型，各许可见下表）：
+
+| 文件 | 大小 | 用途 | 来源 |
+| --- | --- | --- | --- |
+| `deepdanbooru.onnx` | ~615MB | 动漫标签 | deepdanbooru 项目（MIT） |
+| `wd_convnext_tagger_v3.onnx` | ~377MB | 动漫标签 | SmilingWolf/wd-convnext-tagger-v3 |
+| `wd_convnext_tagger_v3-int8.onnx` | ~96MB | 动漫标签（int8） | 由 v3 量化（`scripts/quantize_wd_int8.py`） |
+| `mobileclip_s2_image.tflite` | ~69MB | 语义识别 | Apple MobileCLIP-S2（MIT） |
+| `places365_resnet50_int8.tflite` | ~93MB | 场景识别 | MIT Places365（MIT） |
+| `mobilenet_v2_1.0_224_quant.tflite` | ~4MB | 物体识别 | Google MobileNetV2（Apache-2.0） |
+
+将上述文件放入 `app/src/main/assets/` 后重新构建即可。文件较大，推荐从各模型官方发布页获取（WD-tagger 系列在 HuggingFace `SmilingWolf/`、MobileCLIP 在 `apple/MobileCLIP-S2`、Places365 在 MIT CSAIL、MobileNetV2 在 TF Hub）。
 
 ## 目录
 
@@ -138,3 +155,14 @@ app/src/main/
 
 - ColorOS 16 上，capture 子树内读取 screen backdrop 会触发 RenderNode 递归崩溃 —— 架构上已用嵌套 backdrop 规避，新增页面须遵循。
 - 项目路径含中文时 Gradle 需 `android.overridePathCheck=true`（gradle.properties 已配置）。
+
+## 许可证与致谢
+
+本项目以 **Apache License 2.0** 开源，见 [LICENSE](LICENSE)。
+
+依赖声明：
+
+- **jcifs-ng**（SMB/CIFS 客户端）遵循 **LGPL-2.1**，以 unmodified 二进制形式链接使用；修改该库源码的衍生作品须遵守 LGPL 条款。
+- **libjxl**（BSD-3）、**libavif**（BSD-2）、**dav1d**（BSD-2）、**libjpeg-turbo**（BSD-3 + IJG）、**hwy**（Apache-2.0）为 native 解码依赖，随包静态链接，保留各自版权声明。
+- AndroidX / Jetpack Compose / Media3 / TFLite / Coil / Telephoto / OkHttp / kotlinx（Apache-2.0）、ONNX Runtime / MobileCLIP / Places365（MIT）、NanoHTTPD（BSD-3）、lucide（ISC）、SLF4J（MIT）。
+- AI 模型版权归各自作者，许可见上表；模型仅作端侧推理，不随本仓库分发。
